@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Для Юлі ❤️</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #1f0714 0%, #0d0208 65%, #030002 100%);
+            font-family: 'Montserrat', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            user-select: none;
+        }
+
+        #canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .sound-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 182, 193, 0.25);
+            color: #ffb6c1;
+            padding: 10px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            backdrop-filter: blur(12px);
+            font-size: 13px;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sound-btn:hover {
+            background: rgba(255, 105, 180, 0.2);
+            box-shadow: 0 0 20px rgba(255, 105, 180, 0.35);
+        }
+
+        .scene {
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Реалістичний конверт */
+        .envelope-wrapper {
+            position: relative;
+            width: 340px;
+            height: 230px;
+            cursor: pointer;
+            animation: float 4.5s ease-in-out infinite, appear 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.8s ease;
+            filter: drop-shadow(0 25px 40px rgba(0, 0, 0, 0.6));
+        }
+
+        .envelope-wrapper:hover {
+            transform: scale(1.05) translateY(-6px);
+        }
+
+        .envelope-wrapper.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.8) translateY(50px);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
+        }
+
+        @keyframes appear {
+            0% { opacity: 0; transform: scale(0.5) translateY(60px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .envelope {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #e65c7b 0%, #c2385b 100%);
+            border-radius: 14px;
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.3), inset 0 -5px 15px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+
+        /* Верхній клапан із реалістичною тінню */
+        .flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 170px solid transparent;
+            border-right: 170px solid transparent;
+            border-top: 130px solid #d94a6d;
+            transform-origin: top;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 4;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+
+        .envelope-wrapper.open .flap {
+            transform: rotateX(180deg);
+            z-index: 1;
+            filter: none;
+        }
+
+        /* Бокові та нижні кишені для об'єму */
+        .pocket-left {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-top: 115px solid transparent;
+            border-bottom: 115px solid transparent;
+            border-left: 175px solid #b33052;
+            border-radius: 14px 0 0 14px;
+            z-index: 3;
+            box-shadow: inset 5px 0 10px rgba(0,0,0,0.15);
+        }
+
+        .pocket-right {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 0;
+            border-top: 115px solid transparent;
+            border-bottom: 115px solid transparent;
+            border-right: 175px solid #b33052;
+            border-radius: 0 14px 14px 0;
+            z-index: 3;
+            box-shadow: inset -5px 0 10px rgba(0,0,0,0.15);
+        }
+
+        .pocket-bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 170px solid transparent;
+            border-right: 170px solid transparent;
+            border-bottom: 135px solid #c93b5f;
+            border-radius: 0 0 14px 14px;
+            z-index: 3;
+            box-shadow: inset 0 -8px 12px rgba(0,0,0,0.2);
+        }
+
+        /* Преміальна сургучна печать */
+        .seal {
+            position: absolute;
+            top: 102px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 58px;
+            height: 58px;
+            background: radial-gradient(circle at 35% 35%, #ff2a4d, #8f051c);
+            border-radius: 50%;
+            z-index: 5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5), inset 0 3px 6px rgba(255,255,255,0.4), inset 0 -3px 6px rgba(0,0,0,0.5);
+            transition: all 0.5s ease;
+            animation: pulseSeal 2.2s infinite;
+        }
+
+        @keyframes pulseSeal {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 42, 77, 0.7), 0 8px 20px rgba(0,0,0,0.5); }
+            50% { box-shadow: 0 0 0 16px rgba(255, 42, 77, 0), 0 8px 20px rgba(0,0,0,0.5); }
+        }
+
+        .envelope-wrapper.open .seal {
+            opacity: 0;
+            transform: translateX(-50%) scale(0);
+        }
+
+        .seal svg {
+            width: 28px;
+            height: 28px;
+            fill: #ffe6eb;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.4));
+        }
+
+        .hint-text {
+            margin-top: 35px;
+            font-size: 14px;
+            letter-spacing: 2.5px;
+            text-transform: uppercase;
+            color: rgba(255, 204, 213, 0.85);
+            animation: fadeInOut 2.5s infinite;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        /* Анімація імені Юля */
+        .flying-name-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 25;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .flying-name-overlay.active {
+            opacity: 1;
+        }
+
+        .big-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 76px;
+            font-style: italic;
+            font-weight: 600;
+            color: #ffccd5;
+            text-shadow: 0 0 25px #ff335b, 0 0 50px #b5173e, 0 0 90px rgba(255, 51, 91, 0.7);
+            letter-spacing: 4px;
+            transform: scale(0.3);
+            animation: namePopup 1.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes namePopup {
+            0% { transform: scale(0.3) translateY(30px); opacity: 0; }
+            50% { transform: scale(1.1) translateY(0); opacity: 1; }
+            80% { transform: scale(1) translateY(0); opacity: 1; }
+            100% { transform: scale(1.2) translateY(-20px); opacity: 0; }
+        }
+
+        /* Модальне вікно */
+        .password-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(25, 7, 16, 0.82);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 133, 161, 0.3);
+            padding: 40px 35px;
+            border-radius: 24px;
+            z-index: 20;
+            text-align: center;
+            width: 90%;
+            max-width: 380px;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7), 0 0 50px rgba(255, 51, 91, 0.2);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .password-modal.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .password-modal h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 600;
+            color: #ffccd5;
+            margin-bottom: 10px;
+        }
+
+        .password-modal p {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.65);
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .date-input {
+            width: 100%;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 133, 161, 0.4);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 20px;
+            text-align: center;
+            letter-spacing: 3px;
+            outline: none;
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .date-input::placeholder {
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 2px;
+        }
+
+        .date-input:focus {
+            border-color: #ff335b;
+            box-shadow: 0 0 20px rgba(255, 51, 91, 0.4);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .date-input.shake {
+            animation: shake 0.4s ease-in-out;
+            border-color: #ff0033;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            50% { transform: translateX(8px); }
+            75% { transform: translateX(-8px); }
+        }
+
+        .unlock-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #ff335b 0%, #b5173e 100%);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(255, 51, 91, 0.4);
+        }
+
+        .unlock-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(255, 51, 91, 0.6);
+        }
+
+        .error-msg {
+            color: #ff758f;
+            font-size: 12px;
+            margin-top: 12px;
+            height: 16px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        /* Картка листа */
+        .letter-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -40%) scale(0.85);
+            width: 92%;
+            max-width: 540px;
+            max-height: 85vh;
+            overflow-y: auto;
+            background: linear-gradient(160deg, rgba(255, 245, 247, 0.97) 0%, rgba(255, 226, 233, 0.97) 100%);
+            color: #3d0c19;
+            padding: 45px 40px;
+            border-radius: 24px;
+            z-index: 30;
+            box-shadow: 0 35px 90px rgba(0, 0, 0, 0.75), 0 0 60px rgba(255, 80, 120, 0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: all 1s cubic-bezier(0.22, 1, 0.36, 1);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+        }
+
+        .letter-card.visible {
+            opacity: 1;
+            pointer-events: all;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .letter-border {
+            border: 1px solid rgba(181, 23, 62, 0.2);
+            padding: 25px;
+            border-radius: 16px;
+            position: relative;
+        }
+
+        .letter-date {
+            font-size: 13px;
+            color: #a4133c;
+            letter-spacing: 2px;
+            text-align: right;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .letter-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            font-style: italic;
+            color: #800f2f;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .letter-body {
+            font-size: 15.5px;
+            line-height: 1.8;
+            color: #4a1525;
+            min-height: 180px;
+        }
+
+        .letter-body p {
+            margin-bottom: 16px;
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.8s ease;
+        }
+
+        .letter-body p.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .letter-signature {
+            margin-top: 25px;
+            text-align: right;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 26px;
+            font-style: italic;
+            color: #b5173e;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .letter-signature.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 480px) {
+            .envelope-wrapper {
+                width: 290px;
+                height: 195px;
+            }
+            .flap {
+                border-left: 145px solid transparent;
+                border-right: 145px solid transparent;
+                border-top: 110px solid #d94a6d;
+            }
+            .pocket-left {
+                border-top: 98px solid transparent;
+                border-bottom: 98px solid transparent;
+                border-left: 150px solid #b33052;
+            }
+            .pocket-right {
+                border-top: 98px solid transparent;
+                border-bottom: 98px solid transparent;
+                border-right: 150px solid #b33052;
+            }
+            .pocket-bottom {
+                border-left: 145px solid transparent;
+                border-right: 145px solid transparent;
+                border-bottom: 115px solid #c93b5f;
+            }
+            .seal {
+                top: 85px;
+                width: 50px;
+                height: 50px;
+            }
+            .big-name {
+                font-size: 56px;
+            }
+            .letter-card {
+                padding: 25px 20px;
+            }
+            .letter-border {
+                padding: 18px 15px;
+            }
+            .letter-title {
+                font-size: 28px;
+            }
+            .letter-body {
+                font-size: 14.5px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="canvas"></canvas>
+
+    <button class="sound-btn" id="soundToggle">
+        <span id="soundIcon">🔇</span> <span id="soundText">Увімкнути мелодію</span>
+    </button>
+
+    <!-- Анімація імені Юля -->
+    <div class="flying-name-overlay" id="flyingNameOverlay">
+        <div class="big-name">Юля ❤️</div>
+    </div>
+
+    <div class="scene">
+        <!-- Конверт -->
+        <div class="envelope-wrapper" id="envelopeWrapper">
+            <div class="envelope">
+                <div class="flap"></div>
+                <div class="pocket-left"></div>
+                <div class="pocket-right"></div>
+                <div class="pocket-bottom"></div>
+                <div class="seal">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="hint-text" id="hintText">Натисни на лист ✨</div>
+        </div>
+
+        <!-- Вікно введення дати -->
+        <div class="password-modal" id="passwordModal">
+            <h2>Секретний ключ</h2>
+            <p>Щоб відкрити це послання, введи нашу особливу дату</p>
+            <input type="text" id="dateInput" class="date-input" placeholder="ММ.ДД.РРРР" maxlength="10" autocomplete="off">
+            <button class="unlock-btn" id="unlockBtn">Відкрити серце ❤️</button>
+            <div class="error-msg" id="errorMsg">Неправильна дата, спробуй ще раз...</div>
+        </div>
+
+        <!-- Текст листа -->
+        <div class="letter-card" id="letterCard">
+            <div class="letter-border">
+                <div class="letter-date">09.18.2026</div>
+                <div class="letter-title">Юлю, рідна...</div>
+                <div class="letter-body" id="letterBody">
+                    <p>Ти у мене сама мила, неймовірна, гарна і просто ахуєнна дівчина у цілому світі. Кожна секунда поруч із тобою заряджає і дарує стільки емоцій, скільки ніхто інший дати не здатний.</p>
+                    <p>Твоя усмішка, твій характер і те, яка ти, це просто магія.</p>
+                    <p>Дякую за те, що ти є у моєму житті ❤️</p>
+                </div>
+                <div class="letter-signature" id="letterSignature">Твій сама знаєш хто) ❤️</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class RomanticMusicBox {
+            constructor() {
+                this.ctx = null;
+                this.isPlaying = false;
+                this.interval = null;
+                this.step = 0;
+                this.notes = [
+                    220.00, 329.63, 392.00, 493.88, 523.25, 493.88, 392.00, 329.63,
+                    174.61, 261.63, 329.63, 440.00, 523.25, 440.00, 329.63, 261.63,
+                    261.63, 329.63, 392.00, 493.88, 587.33, 493.88, 392.00, 329.63,
+                    196.00, 293.66, 392.00, 493.88, 587.33, 493.88, 392.00, 293.66
+                ];
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playNote(freq, duration = 1.8, volume = 0.08) {
+                if (!this.ctx) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const osc2 = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc2.type = 'triangle';
+
+                osc.frequency.setValueAtTime(freq, now);
+                osc2.frequency.setValueAtTime(freq * 2, now);
+
+                const gain2 = this.ctx.createGain();
+                gain2.gain.setValueAtTime(0.015, now);
+
+                gain.gain.setValueAtTime(0.0001, now);
+                gain.gain.exponentialRampToValueAtTime(volume, now + 0.06);
+                gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+                osc.connect(gain);
+                osc2.connect(gain2);
+                gain2.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start(now);
+                osc2.start(now);
+                osc.stop(now + duration);
+                osc2.stop(now + duration);
+            }
+
+            playChime() {
+                this.init();
+                const chord = [523.25, 659.25, 783.99, 1046.50];
+                chord.forEach((freq, idx) => {
+                    setTimeout(() => this.playNote(freq, 2.5, 0.09), idx * 110);
+                });
+            }
+
+            start() {
+                this.init();
+                if (this.isPlaying) return;
+                this.isPlaying = true;
+                this.updateUI();
+
+                this.interval = setInterval(() => {
+                    const freq = this.notes[this.step % this.notes.length];
+                    this.playNote(freq, 2.2, 0.07);
+                    this.step++;
+                }, 480);
+            }
+
+            stop() {
+                this.isPlaying = false;
+                clearInterval(this.interval);
+                this.updateUI();
+            }
+
+            toggle() {
+                if (this.isPlaying) this.stop();
+                else this.start();
+            }
+
+            updateUI() {
+                const icon = document.getElementById('soundIcon');
+                const text = document.getElementById('soundText');
+                if (this.isPlaying) {
+                    icon.textContent = '🎵';
+                    text.textContent = 'Мелодія грає';
+                } else {
+                    icon.textContent = '🔇';
+                    text.textContent = 'Увімкнути мелодію';
+                }
+            }
+        }
+
+        const music = new RomanticMusicBox();
+        document.getElementById('soundToggle').addEventListener('click', () => music.toggle());
+
+        /* Покращені та глибші частинки на фоні */
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+        let burstHearts = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor(isHeart = false) {
+                this.reset(isHeart);
+            }
+
+            reset(isHeart = false) {
+                this.x = Math.random() * width;
+                this.y = height + Math.random() * 100;
+                this.size = isHeart ? Math.random() * 12 + 6 : Math.random() * 2.8 + 0.8;
+                this.speedY = Math.random() * 0.9 + 0.3;
+                this.speedX = (Math.random() - 0.5) * 0.7;
+                this.opacity = Math.random() * 0.7 + 0.2;
+                this.isHeart = isHeart;
+                this.wobble = Math.random() * Math.PI * 2;
+                this.wobbleSpeed = Math.random() * 0.03 + 0.01;
+                this.color = isHeart 
+                    ? `rgba(255, ${Math.floor(Math.random() * 90 + 60)}, ${Math.floor(Math.random() * 110 + 100)}, ${this.opacity})`
+                    : `rgba(255, 210, 225, ${this.opacity})`;
+            }
+
+            update() {
+                this.y -= this.speedY;
+                this.wobble += this.wobbleSpeed;
+                this.x += Math.sin(this.wobble) * 0.6 + this.speedX;
+
+                if (this.y < -30) {
+                    this.reset(this.isHeart);
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.fillStyle = this.color;
+                if (this.isHeart) {
+                    this.drawHeart(this.x, this.y, this.size);
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = '#ff4d79';
+                    ctx.fill();
+                }
+                ctx.restore();
+            }
+
+            drawHeart(x, y, size) {
+                ctx.beginPath();
+                const topCurveHeight = size * 0.3;
+                ctx.moveTo(x, y + topCurveHeight);
+                ctx.bezierCurveTo(x, y, x - size / 2, y, x - size / 2, y + topCurveHeight);
+                ctx.bezierCurveTo(x - size / 2, y + (size + topCurveHeight) / 2, x, y + (size + topCurveHeight) / 1.4, x, y + size);
+                ctx.bezierCurveTo(x, y + (size + topCurveHeight) / 1.4, x + size / 2, y + (size + topCurveHeight) / 2, x + size / 2, y + topCurveHeight);
+                ctx.bezierCurveTo(x + size / 2, y, x, y, x, y + topCurveHeight);
+                ctx.closePath();
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = '#ff3366';
+                ctx.fill();
+            }
+        }
+
+        class BurstHeart extends Particle {
+            constructor(x, y) {
+                super(true);
+                this.x = x;
+                this.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const velocity = Math.random() * 7 + 2;
+                this.vx = Math.cos(angle) * velocity;
+                this.vy = Math.sin(angle) * velocity - 2.5;
+                this.gravity = 0.07;
+                this.alpha = 1;
+                this.size = Math.random() * 16 + 8;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += this.gravity;
+                this.alpha -= 0.012;
+                this.color = `rgba(255, 60, 100, ${Math.max(0, this.alpha)})`;
+            }
+        }
+
+        for (let i = 0; i < 75; i++) {
+            const p = new Particle(i % 3 === 0);
+            p.y = Math.random() * height;
+            particles.push(p);
+        }
+
+        function createHeartExplosion() {
+            for (let i = 0; i < 70; i++) {
+                burstHearts.push(new BurstHeart(width / 2, height / 2));
+            }
+        }
+
+        function animateCanvas() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            burstHearts = burstHearts.filter(h => h.alpha > 0);
+            burstHearts.forEach(h => {
+                h.update();
+                h.draw();
+            });
+
+            requestAnimationFrame(animateCanvas);
+        }
+        animateCanvas();
+
+        const envelopeWrapper = document.getElementById('envelopeWrapper');
+        const passwordModal = document.getElementById('passwordModal');
+        const dateInput = document.getElementById('dateInput');
+        const unlockBtn = document.getElementById('unlockBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const letterCard = document.getElementById('letterCard');
+        const flyingNameOverlay = document.getElementById('flyingNameOverlay');
+
+        const SECRET_DATE = "09.18.2026";
+
+        envelopeWrapper.addEventListener('click', () => {
+            music.start();
+            envelopeWrapper.classList.add('open');
+            document.getElementById('hintText').style.opacity = '0';
+
+            setTimeout(() => {
+                envelopeWrapper.classList.add('hidden');
+                passwordModal.classList.add('active');
+                dateInput.focus();
+            }, 600);
+        });
+
+        dateInput.addEventListener('input', (e) => {
+            errorMsg.style.opacity = '0';
+            let val = e.target.value.replace(/\D/g, '');
+            if (val.length > 2 && val.length <= 4) {
+                val = val.slice(0, 2) + '.' + val.slice(2);
+            } else if (val.length > 4) {
+                val = val.slice(0, 2) + '.' + val.slice(2, 4) + '.' + val.slice(4, 8);
+            }
+            e.target.value = val;
+
+            if (val.length === 10) {
+                checkDate();
+            }
+        });
+
+        dateInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkDate();
+        });
+
+        unlockBtn.addEventListener('click', checkDate);
+
+        function checkDate() {
+            const entered = dateInput.value.trim();
+            if (entered === SECRET_DATE) {
+                passwordModal.classList.remove('active');
+                music.playChime();
+                createHeartExplosion();
+
+                for (let i = 0; i < 35; i++) {
+                    particles.push(new Particle(true));
+                }
+
+                flyingNameOverlay.classList.add('active');
+
+                setTimeout(() => {
+                    flyingNameOverlay.classList.remove('active');
+                    letterCard.classList.add('visible');
+                    revealLetterText();
+                }, 1600);
+            } else {
+                dateInput.classList.remove('shake');
+                void dateInput.offsetWidth;
+                dateInput.classList.add('shake');
+                errorMsg.style.opacity = '1';
+                music.playNote(146.83, 0.5, 0.05);
+            }
+        }
+
+        function revealLetterText() {
+            const paragraphs = document.querySelectorAll('#letterBody p');
+            const signature = document.getElementById('letterSignature');
+
+            paragraphs.forEach((p, index) => {
+                setTimeout(() => {
+                    p.classList.add('show');
+                }, 400 + index * 1100);
+            });
+
+            setTimeout(() => {
+                signature.classList.add('show');
+            }, 400 + paragraphs.length * 1100);
+        }
+    </script>
+</body>
+</html>
